@@ -1,0 +1,106 @@
+{
+  "name": "ai-commit-pr-generator",
+  "displayName": "AI Commit & PR Generator",
+  "description": "Generate AI-powered git commit messages (Conventional Commits) and PR descriptions using OpenRouter.",
+  "publisher": "wsilva",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "git",
+    "commit",
+    "ai",
+    "openrouter",
+    "pull request",
+    "conventional commits"
+  ],
+  "extensionDependencies": [
+    "vscode.git"
+  ],
+  "activationEvents": [],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiCommitPr.generateCommit",
+        "title": "Generate AI Commit Message",
+        "icon": "$(sparkle)",
+        "category": "AI Commit"
+      },
+      {
+        "command": "aiCommitPr.generatePR",
+        "title": "Generate AI PR Description",
+        "icon": "$(sparkle)",
+        "category": "AI Commit"
+      }
+    ],
+    "menus": {
+      "scm/title": [
+        {
+          "command": "aiCommitPr.generateCommit",
+          "group": "navigation",
+          "when": "scmProvider == git"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "aiCommitPr.generatePR",
+          "group": "navigation",
+          "when": "view == github:createPullRequestWebview"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AI Commit & PR Generator",
+      "properties": {
+        "aiCommitPr.openRouterApiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "OpenRouter API key. Get one at [openrouter.ai/keys](https://openrouter.ai/keys)"
+        },
+        "aiCommitPr.model": {
+          "type": "string",
+          "default": "anthropic/claude-3.5-sonnet",
+          "description": "OpenRouter model ID (e.g. anthropic/claude-3.5-sonnet, mistralai/mistral-7b-instruct, openai/gpt-4o)"
+        },
+        "aiCommitPr.baseBranch": {
+          "type": "string",
+          "default": "main",
+          "description": "Base branch for PR diff comparison (main, master, develop, etc.)"
+        },
+        "aiCommitPr.commitPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "Custom commit prompt. Use {diff} as placeholder. Leave empty to use the default prompt."
+        },
+        "aiCommitPr.prPrompt": {
+          "type": "string",
+          "default": "",
+          "description": "Custom PR prompt. Use {history} (JSON commit history) and {template} as placeholders. Leave empty to use the default prompt."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "webpack --mode development",
+    "build": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "vscode:prepublish": "npm run build",
+    "release": "bash scripts/release.sh",
+    "release:minor": "bash scripts/release.sh minor",
+    "release:major": "bash scripts/release.sh major"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "@vscode/vsce": "^3.9.1",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.3.3",
+    "webpack": "^5.90.0",
+    "webpack-cli": "^5.1.4"
+  }
+}

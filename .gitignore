@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+out/
+
+# Packaging
+*.vsix
+
+# TypeScript cache
+*.tsbuildinfo
+
+# VS Code test runner
+.vscode-test/
+
+# Environment / secrets
+.env
+.env.local
+
+# OS
+.DS_Store
+Thumbs.db
