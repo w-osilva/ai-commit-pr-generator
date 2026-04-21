@@ -3,7 +3,7 @@
   "displayName": "AI Commit & PR Generator",
   "description": "Generate AI-powered git commit messages (Conventional Commits) and PR descriptions using OpenRouter.",
   "publisher": "wsilva",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -18,6 +18,10 @@
     "pull request",
     "conventional commits"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wsilva/ai-commit-pr-generator"
+  },
   "extensionDependencies": [
     "vscode.git"
   ],
