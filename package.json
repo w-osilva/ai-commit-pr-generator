@@ -20,7 +20,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/wsilva/ai-commit-pr-generator"
+    "url": "https://github.com/w-osilva/ai-commit-pr-generator"
   },
   "extensionDependencies": [
     "vscode.git"
@@ -96,7 +96,8 @@
     "vscode:prepublish": "npm run build",
     "release": "bash scripts/release.sh",
     "release:minor": "bash scripts/release.sh minor",
-    "release:major": "bash scripts/release.sh major"
+    "release:major": "bash scripts/release.sh major",
+    "publish:marketplace": "bash scripts/release.sh patch --publish"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

@@ -18,6 +18,8 @@ die()     { echo -e "${RED}✖ $*${RESET}" >&2; exit 1; }
 # ── args ─────────────────────────────────────────────────────────────────────
 
 BUMP="${1:-patch}"   # patch | minor | major
+PUBLISH=false
+for arg in "$@"; do [[ "$arg" == "--publish" ]] && PUBLISH=true; done
 
 [[ "$BUMP" =~ ^(patch|minor|major)$ ]] \
   || die "Invalid bump type '$BUMP'. Use: patch (default), minor, or major."
@@ -69,8 +71,52 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
   git commit -m "chore: release v${NEW}"
   git tag "v${NEW}"
   success "Tagged v${NEW}."
-  echo ""
-  echo -e "  Push with: ${CYAN}git push && git push --tags${RESET}"
+fi
+
+# ── push ─────────────────────────────────────────────────────────────────────
+
+if git remote get-url origin >/dev/null 2>&1; then
+  info "Pushing to remote…"
+  git push
+  git push --tags
+  success "Pushed."
+else
+  warn "No remote configured — skipping push."
+fi
+
+# ── GitHub Release ────────────────────────────────────────────────────────────
+
+RELEASE_URL=""
+if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
+  info "Creating GitHub Release v${NEW}…"
+  gh release create "v${NEW}" "$VSIX" \
+    --title "v${NEW}" \
+    --notes "$(cat <<EOF
+## Install
+
+Download \`${VSIX}\` and install in VS Code:
+
+\`\`\`
+code --install-extension ${VSIX}
+\`\`\`
+
+Or via the VS Code UI: **Extensions → ··· → Install from VSIX…**
+EOF
+)"
+  success "GitHub Release created."
+  RELEASE_URL=$(gh release view "v${NEW}" --json url -q .url 2>/dev/null || echo "")
+else
+  warn "gh CLI not found or not authenticated — skipping GitHub Release."
+  echo -e "  Create manually: ${CYAN}gh release create v${NEW} ${VSIX} --title \"v${NEW}\"${RESET}"
+fi
+
+# ── VS Code Marketplace publish ───────────────────────────────────────────────
+
+if [[ "$PUBLISH" == true ]]; then
+  info "Publishing to VS Code Marketplace…"
+  ./node_modules/.bin/vsce publish --no-git-tag-version --no-update-package-json
+  success "Published to Marketplace."
+  MARKETPLACE_URL="https://marketplace.visualstudio.com/items?itemName=$(node -p "require('./package.json').publisher + '.' + require('./package.json').name")"
 fi
 
 # ── summary ───────────────────────────────────────────────────────────────────
@@ -79,6 +125,9 @@ echo ""
 echo -e "${BOLD}Done.${RESET}"
 echo -e "  Version : ${GREEN}${NEW}${RESET}"
 echo -e "  File    : ${GREEN}${VSIX}${RESET}"
+[[ -n "$RELEASE_URL" ]] && echo -e "  Release : ${GREEN}${RELEASE_URL}${RESET}"
 echo ""
 echo -e "Install locally:"
 echo -e "  ${CYAN}code --install-extension ${VSIX}${RESET}"
+[[ "${PUBLISH:-false}" == true && -n "${MARKETPLACE_URL:-}" ]] \
+  && echo -e "  Marketplace : ${GREEN}${MARKETPLACE_URL}${RESET}"
