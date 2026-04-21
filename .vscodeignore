@@ -3,9 +3,12 @@
 src/**
 out/**
 node_modules/**
+images/*.svg
+scripts/**
 .gitignore
 .eslintrc.json
 webpack.config.js
 tsconfig.json
+DEVELOPMENT.md
 **/*.map
 **/*.ts

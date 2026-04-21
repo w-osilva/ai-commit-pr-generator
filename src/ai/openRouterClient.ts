@@ -5,6 +5,8 @@ export interface Message {
   content: string;
 }
 
+export const DEFAULT_MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
+
 export interface OpenRouterConfig {
   apiKey: string;
   model: string;

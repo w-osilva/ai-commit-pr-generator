@@ -18,8 +18,6 @@ die()     { echo -e "${RED}✖ $*${RESET}" >&2; exit 1; }
 # ── args ─────────────────────────────────────────────────────────────────────
 
 BUMP="${1:-patch}"   # patch | minor | major
-PUBLISH=false
-for arg in "$@"; do [[ "$arg" == "--publish" ]] && PUBLISH=true; done
 
 [[ "$BUMP" =~ ^(patch|minor|major)$ ]] \
   || die "Invalid bump type '$BUMP'. Use: patch (default), minor, or major."
@@ -33,7 +31,6 @@ cd "$(dirname "$0")/.."
 
 [[ -f package.json ]] || die "package.json not found. Run this script from the repo root."
 
-# Warn (but don't abort) if there are uncommitted changes
 if ! git diff --quiet 2>/dev/null || ! git diff --cached --quiet 2>/dev/null; then
   warn "You have uncommitted changes. The release will proceed, but consider committing first."
   echo ""
@@ -47,12 +44,8 @@ info "Current version: ${BOLD}${CURRENT}${RESET}"
 # ── bump version in package.json ─────────────────────────────────────────────
 
 info "Bumping ${BUMP} version…"
-# npm version writes the new version and creates a git tag; --no-git-tag-version
-# skips the tag so we can create it ourselves after the build succeeds
 NEW=$(npm version "$BUMP" --no-git-tag-version | tr -d 'v')
 success "New version: ${BOLD}${NEW}${RESET}"
-
-# ── build ─────────────────────────────────────────────────────────────────────
 
 # ── package (vsce runs vscode:prepublish → build internally) ─────────────────
 
@@ -60,7 +53,6 @@ VSIX="ai-commit-pr-generator-${NEW}.vsix"
 
 info "Packaging ${VSIX}…"
 ./node_modules/.bin/vsce package --no-git-tag-version --no-update-package-json -o "$VSIX"
-
 success "Package ready: ${BOLD}${VSIX}${RESET}"
 
 # ── git commit + tag ──────────────────────────────────────────────────────────
@@ -110,15 +102,6 @@ else
   echo -e "  Create manually: ${CYAN}gh release create v${NEW} ${VSIX} --title \"v${NEW}\"${RESET}"
 fi
 
-# ── VS Code Marketplace publish ───────────────────────────────────────────────
-
-if [[ "$PUBLISH" == true ]]; then
-  info "Publishing to VS Code Marketplace…"
-  ./node_modules/.bin/vsce publish --no-git-tag-version --no-update-package-json
-  success "Published to Marketplace."
-  MARKETPLACE_URL="https://marketplace.visualstudio.com/items?itemName=$(node -p "require('./package.json').publisher + '.' + require('./package.json').name")"
-fi
-
 # ── summary ───────────────────────────────────────────────────────────────────
 
 echo ""
@@ -127,7 +110,5 @@ echo -e "  Version : ${GREEN}${NEW}${RESET}"
 echo -e "  File    : ${GREEN}${VSIX}${RESET}"
 [[ -n "$RELEASE_URL" ]] && echo -e "  Release : ${GREEN}${RELEASE_URL}${RESET}"
 echo ""
-echo -e "Install locally:"
-echo -e "  ${CYAN}code --install-extension ${VSIX}${RESET}"
-[[ "${PUBLISH:-false}" == true && -n "${MARKETPLACE_URL:-}" ]] \
-  && echo -e "  Marketplace : ${GREEN}${MARKETPLACE_URL}${RESET}"
+echo -e "Upload ${BOLD}${VSIX}${RESET} to the Marketplace:"
+echo -e "  ${CYAN}https://marketplace.visualstudio.com/manage/publishers/wsilva${RESET}"
