@@ -12,7 +12,7 @@ VS Code extension that uses AI to write your git commit messages and pull reques
 
 ### Option A — Install from .vsix (recommended for now)
 
-1. Download the `.vsix` file from the [Releases](../../releases) page
+1. Download the `.vsix` file from the [Releases](https://github.com/wsilva/ai-commit-pr-generator/releases) page
 2. Open VS Code
 3. Press `Ctrl+Shift+P` → type **Extensions: Install from VSIX** → select the downloaded file
 4. Reload VS Code when prompted
