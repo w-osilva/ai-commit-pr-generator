@@ -64,7 +64,7 @@ If you use the [GitHub Pull Requests](https://marketplace.visualstudio.com/items
 
 ## Choosing a model
 
-The default is `nvidia/nemotron-3-super-120b-a12b:free` — free, 120B parameters, 262K context. You can change it in Settings → search **AI Commit** → **Model**.
+The default is `openai/gpt-oss-120b:free` — free, 120B parameters, 262K context. You can change it in Settings → search **AI Commit** → **Model**.
 
 ### Free models
 
@@ -73,7 +73,8 @@ Models with the `:free` suffix have no cost. Use the **Programming** category fi
 | Model | Context | Notes |
 |---|---|---|
 | `google/gemma-4-31b-it:free` | 262K | Google, solid quality for code |
-| `nvidia/nemotron-3-super-120b-a12b:free` | 262K | NVIDIA, large model, best free option |
+| `openai/gpt-oss-120b:free` | 262K | OpenAI, large model, best free option |
+| `nvidia/nemotron-3-super-120b-a12b:free` | 262K | NVIDIA, large model, excellent quality |
 | `nvidia/nemotron-3-nano-30b-a3b:free` | 256K | NVIDIA, lighter and faster |
 | `openrouter/free` | 200K | Auto-routes to an available free model |
 
@@ -107,10 +108,10 @@ If your repository has a PR template, the extension finds and uses it automatica
 | Setting | Default | Description |
 |---|---|---|
 | `aiCommitPr.openRouterApiKey` | *(empty)* | Your OpenRouter API key |
-| `aiCommitPr.model` | `nvidia/nemotron-3-super-120b-a12b:free` | AI model to use |
+| `aiCommitPr.model` | `openai/gpt-oss-120b:free` | AI model to use |
 | `aiCommitPr.baseBranch` | `main` | Branch to compare against for PR diff |
-| `aiCommitPr.commitPrompt` | *(empty)* | Custom prompt for commit messages. Use `{diff}` as placeholder. |
-| `aiCommitPr.prPrompt` | *(empty)* | Custom prompt for PR descriptions. Use `{history}` and `{template}`. |
+| `aiCommitPr.commitPrompt` | Default prompt | Custom prompt for commit messages. Use `{diff}` as placeholder. Leave empty to use the default. |
+| `aiCommitPr.prPrompt` | Default prompt | Custom prompt for PR descriptions. Use `{history}` and `{template}` as placeholders. Leave empty to use the default. |
 
 ---
 

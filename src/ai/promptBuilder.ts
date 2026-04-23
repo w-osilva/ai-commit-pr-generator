@@ -33,8 +33,27 @@ const PR_WRITING_GUIDELINES = `When writing the description, follow these guidel
 - Omit any template section entirely if you have nothing meaningful to add.
 - Unless the git history is completely focused on the test suite, do not include information about test changes in the description.`;
 
+const PR_PROMPT = `Generate a pull request description based on the following context.
+
+<git_history>
+{history}
+</git_history>
+
+<pull_request_template>
+{template}
+</pull_request_template>
+
+Provide a title for the pull request and a description following the pull request template above.
+
+The title must be in Conventional Commits format: <type>(<scope>): <short summary>.
+
+${PR_WRITING_GUIDELINES}
+
+Reply with ONLY a valid JSON object: {"title": "...", "body": "..."}. No text outside the JSON.`;
+
 export function buildCommitMessages(diff: string, customPrompt?: string): Message[] {
-  const content = (customPrompt ?? COMMIT_PROMPT)
+  const prompt = customPrompt || COMMIT_PROMPT;
+  const content = prompt
     .replace('{diff}', diff)
     .replace('{changes}', diff); // accept both placeholders
 
@@ -49,21 +68,10 @@ export function buildPRMessages(
   const templateSection = template ?? DEFAULT_PR_TEMPLATE;
   const historyJson = JSON.stringify(history, null, 2);
 
-  if (customPrompt) {
-    const content = customPrompt
-      .replace('{history}', historyJson)
-      .replace('{template}', templateSection);
-    return [{ role: 'user', content }];
-  }
-
-  const content =
-    `Generate a pull request description based on the following context.\n\n` +
-    `<git_history>\n${historyJson}\n</git_history>\n\n` +
-    `<pull_request_template>\n${templateSection}\n</pull_request_template>\n\n` +
-    `Provide a title for the pull request and a description following the pull request template above.\n\n` +
-    `The title must be in Conventional Commits format: <type>(<scope>): <short summary>.\n\n` +
-    PR_WRITING_GUIDELINES +
-    `\n\nReply with ONLY a valid JSON object: {"title": "...", "body": "..."}. No text outside the JSON.`;
+  const prompt = customPrompt || PR_PROMPT;
+  const content = prompt
+    .replace('{history}', historyJson)
+    .replace('{template}', templateSection);
 
   return [{ role: 'user', content }];
 }

@@ -5,7 +5,7 @@ export interface Message {
   content: string;
 }
 
-export const DEFAULT_MODEL = 'nvidia/nemotron-3-super-120b-a12b:free';
+export const DEFAULT_MODEL = 'openai/gpt-oss-120b:free';
 
 export interface OpenRouterConfig {
   apiKey: string;
