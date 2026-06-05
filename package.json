@@ -97,10 +97,12 @@
     "vscode:prepublish": "npm run build",
     "release": "bash scripts/release.sh",
     "release:minor": "bash scripts/release.sh minor",
-    "release:major": "bash scripts/release.sh major"
+    "release:major": "bash scripts/release.sh major",
+    "test": "node --import tsx --test test/*.test.ts"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
+    "tsx": "^4.19.2",
     "@types/vscode": "^1.85.0",
     "@vscode/vsce": "^3.9.1",
     "ts-loader": "^9.5.1",
