@@ -6,7 +6,7 @@ Generate git commit messages and pull request descriptions using AI, directly in
 - PR descriptions follow your repository's PR template
 - Two backends to choose from:
   - **OpenRouter** — any model (Claude, GPT, Gemini, Mistral…) via one API key
-  - **Claude CLI** — reuses your existing, SSO-authenticated [Claude Code](https://claude.com/claude-code) session. No API key required.
+  - **Claude CLI** — reuses your existing, authenticated [Claude Code](https://claude.com/claude-code) session. No API key required.
 
 ---
 
