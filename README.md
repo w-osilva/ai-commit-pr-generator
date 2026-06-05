@@ -4,7 +4,9 @@ Generate git commit messages and pull request descriptions using AI, directly in
 
 - Commit messages follow [Conventional Commits](https://www.conventionalcommits.org) — `feat`, `fix`, `refactor`, etc.
 - PR descriptions follow your repository's PR template
-- Works with any AI model via [OpenRouter](https://openrouter.ai) — Claude, GPT-4, Gemini, Mistral, and more
+- Two backends to choose from:
+  - **OpenRouter** — any model (Claude, GPT, Gemini, Mistral…) via one API key
+  - **Claude CLI** — reuses your existing, authenticated [Claude Code](https://claude.com/claude-code) session. No API key required.
 
 ---
 
@@ -13,6 +15,17 @@ Generate git commit messages and pull request descriptions using AI, directly in
 OpenRouter is a service that gives you access to dozens of AI models through a single API key. Instead of signing up separately for Anthropic, OpenAI, and Google, you create one account and can switch between models freely.
 
 New accounts receive free credits. Most models cost a fraction of a cent per request — generating a commit message or PR description typically costs less than $0.01.
+
+---
+
+## Choosing a backend
+
+Set `aiCommitPr.provider` in Settings (search **AI Commit**):
+
+- **`openrouter`** (default) — uses the OpenRouter API. Follow the [Setup](#setup) below to add a key.
+- **`claude-cli`** — shells out to the `claude` command-line tool, reusing whatever session you're already logged into (including SSO). Nothing to configure beyond having the [Claude CLI](https://claude.com/claude-code) installed and logged in (`claude` → `/login`). If `claude` isn't on your PATH — common with nvm installs under WSL — set `aiCommitPr.claudeCliPath` to its full path.
+
+The rest of this guide covers the OpenRouter setup. If you use the Claude CLI backend, skip to [Generating a commit message](#generating-a-commit-message).
 
 ---
 
@@ -107,8 +120,10 @@ If your repository has a PR template, the extension finds and uses it automatica
 
 | Setting | Default | Description |
 |---|---|---|
-| `aiCommitPr.openRouterApiKey` | *(empty)* | Your OpenRouter API key |
-| `aiCommitPr.model` | `openai/gpt-oss-120b:free` | AI model to use |
+| `aiCommitPr.provider` | `openrouter` | Backend to use: `openrouter` or `claude-cli` |
+| `aiCommitPr.claudeCliPath` | `claude` | Path to the Claude CLI binary (override if not on PATH, e.g. nvm under WSL) |
+| `aiCommitPr.openRouterApiKey` | *(empty)* | Your OpenRouter API key (OpenRouter backend only) |
+| `aiCommitPr.model` | `openai/gpt-oss-120b:free` | AI model to use (OpenRouter backend only) |
 | `aiCommitPr.baseBranch` | `main` | Branch to compare against for PR diff |
 | `aiCommitPr.commitPrompt` | Default prompt | Custom prompt for commit messages. Use `{diff}` as placeholder. Leave empty to use the default. |
 | `aiCommitPr.prPrompt` | Default prompt | Custom prompt for PR descriptions. Use `{history}` and `{template}` as placeholders. Leave empty to use the default. |
@@ -124,7 +139,13 @@ Stage at least one file first by clicking the `+` icon next to it.
 You're on the base branch, or there are no commits on your branch yet. Switch to a feature branch with at least one commit.
 
 **"OpenRouter API key is not configured"**
-Follow the [Setup](#setup) steps above.
+Follow the [Setup](#setup) steps above, or switch `aiCommitPr.provider` to `claude-cli` to use the Claude CLI instead.
+
+**"Claude CLI not found"**
+Install the [Claude CLI](https://claude.com/claude-code), or set `aiCommitPr.claudeCliPath` to its full path (run `which claude` to find it).
+
+**"Claude CLI isn't logged in"**
+Run `claude` in a terminal and use `/login` to authenticate, then try again.
 
 **Request fails even with a valid key**
 Check your account balance at [openrouter.ai/credits](https://openrouter.ai/credits). New accounts get free credits but they can run out.

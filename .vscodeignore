@@ -10,5 +10,7 @@ scripts/**
 webpack.config.js
 tsconfig.json
 DEVELOPMENT.md
+docs/**
+test/**
 **/*.map
 **/*.ts

@@ -1,39 +1,37 @@
 import { Message } from './openRouterClient';
 import { CommitEntry } from '../git/gitProvider';
 import { DEFAULT_PR_TEMPLATE } from '../utils/templateReader';
+import { extractJsonObject } from './jsonExtract';
 
-const COMMIT_PROMPT = `You are a senior engineer writing a git commit message for a production codebase.
+const COMMIT_PROMPT = `You write exactly ONE git commit message for the staged diff, in Conventional Commits. Reason silently, then output only the final message.
 
-Given these staged changes:
+STEPS (silent): 1) find the dominant change and its intent; 2) pick the type; 3) pick a scope or none; 4) write the subject; 5) add a body only if required; 6) output.
 
+TYPE — pick the FIRST that fits: revert (undoes a commit) > fix (corrects a bug/regression) > perf (faster, same behavior) > feat (new/extended behavior) > refactor (restructure, no behavior change) > test (tests only) > docs (docs only) > build (deps/build config) > ci (pipeline only) > style (formatting only) > chore (anything else).
+
+SUBJECT: \`type(scope): description\`
+- scope: optional, lowercase, the affected area inferred from paths; omit if unclear.
+- description: imperative, lowercase, no period. Whole line <= 72 chars.
+- breaking change: \`type!: ...\`.
+
+BODY: none by default. Add one ONLY for a reason not visible in the diff (the why, a fix's cause, a trade-off). If used: blank line, then plain prose, <= 3 sentences, no bullets, no restating the diff.
+
+NEVER: output anything but the message; use code fences/quotes/preamble; name files or lines; add trailers, sign-offs, ticket or AI/co-author lines.
+
+EXAMPLES (format only, do not reuse):
+feat(auth): add password reset via email token
+---
+fix(cache): evict entries when their owner is deleted
+
+Stale cache entries kept returning records that no longer existed, exposing deleted data to other users. Evicting on owner deletion closes the gap without a broad cache flush.
+
+<diff>
 {diff}
+</diff>
 
-Write a commit message following Conventional Commits (https://www.conventionalcommits.org).
+Write the commit message now. Output only the message.`;
 
-Format: <type>(<scope>): <short summary in imperative mood, max 72 chars>
-
-[body — optional, only if the WHY or business context is non-obvious]
-
-Rules:
-- Types: feat, fix, refactor, perf, test, chore, docs
-- Scope: the module, page, or domain affected (e.g. guardian-dashboard, billing, auth)
-- Summary: imperative mood ("add", "remove", "replace"), no period at the end
-- Body: explain WHY the change was made and any non-obvious business logic or trade-offs. Skip it if the summary is self-explanatory. Do NOT describe what the diff shows — the reader can see that.
-- No bullet points in the body; use plain prose, max 3 sentences
-- Do not mention file names or line numbers
-
-Output only the commit message, no explanation.`;
-
-const PR_WRITING_GUIDELINES = `When writing the description, follow these guidelines:
-
-- Be extremely clear, direct, and concise (1-2 sentences max for each section). No emojis.
-- Bullet lists are fine, but don't bold the start of each bullet.
-- Focus on "why" the changes were made and "how" they achieve the goal, rather than describing "what" was changed.
-- Avoid unnecessary adjectives or salesy language.
-- Omit any template section entirely if you have nothing meaningful to add.
-- Unless the git history is completely focused on the test suite, do not include information about test changes in the description.`;
-
-const PR_PROMPT = `Generate a pull request description based on the following context.
+const PR_PROMPT = `You write a pull request description for review. The git history is the source of truth for what changed; the template defines the exact structure your description must follow. Reason silently through the STEPS, then output only the JSON object.
 
 <git_history>
 {history}
@@ -43,13 +41,36 @@ const PR_PROMPT = `Generate a pull request description based on the following co
 {template}
 </pull_request_template>
 
-Provide a title for the pull request and a description following the pull request template above.
+STEPS (silent):
+1. Read the whole history. Cluster the commits into a few themes (by feature/area), not commit-by-commit.
+2. Infer the PR's PRIMARY intent and its motivation (the why), even if commit messages are terse.
+3. Note anything a reviewer must not miss: breaking changes, data migrations, new dependencies, config/security changes, follow-ups. (Only surface these if the appropriate template section exists.)
+4. Map the themes onto the template's sections, keeping its exact headers and order.
+5. Draft concise prose per section. Then build and validate the JSON.
 
-The title must be in Conventional Commits format: <type>(<scope>): <short summary>.
+TITLE:
+- Conventional Commits: \`type(scope): summary\` (scope optional).
+- Imperative, lowercase summary, no trailing period, <= 72 chars.
+- Capture the PRIMARY intent of the whole PR, not one commit. Use \`type!:\` if it's a breaking change.
 
-${PR_WRITING_GUIDELINES}
+BODY (GitHub-flavored Markdown):
+- Use the template's section headers verbatim and in order. Never invent sections it lacks.
+- Omit a section entirely if you have nothing meaningful for it. Do not write "N/A".
+- Explain WHY the change was made and HOW it achieves the goal — not a flat list of WHAT changed.
+- Be direct: 1-2 sentences per section. No emojis, no salesy or filler adjectives.
+- Bullets are fine; do not bold the start of each bullet.
+- Do not describe test changes unless the PR is entirely about the test suite.
 
-Reply with ONLY a valid JSON object: {"title": "...", "body": "..."}. No text outside the JSON.`;
+NEVER: output anything outside the JSON; use code fences around the JSON; invent changes not in the history; pad with generic statements.
+
+OUTPUT — reply with ONLY this JSON object: {"title": "...", "body": "..."}
+- Valid JSON, double quotes, no trailing commas.
+- "body" is a SINGLE JSON string: escape every line break as \\n and every double quote as \\". Put no literal newlines inside the string.
+
+Example of the exact shape (content is illustrative only):
+{"title": "feat(billing): prorate mid-cycle plan upgrades", "body": "## Summary\\nUpgrades before renewal charged the full new price, driving support tickets.\\n\\n## Changes\\nProration credits the unused portion of the current plan against the upgrade."}
+
+Produce the JSON now. Output only the JSON object.`;
 
 export function buildCommitMessages(diff: string, customPrompt?: string): Message[] {
   const prompt = customPrompt || COMMIT_PROMPT;
@@ -82,21 +103,17 @@ export interface PRResult {
 }
 
 export function parsePRResponse(raw: string): PRResult {
-  // Strip markdown code fences if model wraps in ```json
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '').trim();
-
-  try {
-    const parsed = JSON.parse(cleaned) as { title?: string; body?: string };
+  const extracted = extractJsonObject(raw);
+  if (extracted && (extracted.title || extracted.body)) {
     return {
-      title: parsed.title ?? '',
-      body: parsed.body ?? cleaned,
-    };
-  } catch {
-    // Best-effort fallback: first line as title, rest as body
-    const lines = raw.split('\n');
-    return {
-      title: lines[0].replace(/^#+\s*/, '').trim(),
-      body: lines.slice(1).join('\n').trim(),
+      title: extracted.title ?? '',
+      body: extracted.body ?? '',
     };
   }
+  // Best-effort fallback: first line as title, rest as body.
+  const lines = raw.trim().split('\n');
+  return {
+    title: lines[0].replace(/^#+\s*/, '').trim(),
+    body: lines.slice(1).join('\n').trim(),
+  };
 }
