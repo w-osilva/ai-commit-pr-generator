@@ -4,13 +4,15 @@ import * as claudeCli from './claudeCliClient';
 
 export interface AiProvider {
   generate(messages: Message[]): Promise<string>;
-  preflight(): Promise<void>;
+  // Returns true if the backend is ready. On failure it shows its own error
+  // dialog and returns false, so callers just bail out without re-reporting.
+  preflight(): Promise<boolean>;
 }
 
 class OpenRouterProvider implements AiProvider {
   constructor(private apiKey: string, private model: string) {}
 
-  async preflight(): Promise<void> {
+  async preflight(): Promise<boolean> {
     if (!this.apiKey) {
       const action = await vscode.window.showErrorMessage(
         'AI Commit: OpenRouter API key is not configured.',
@@ -22,8 +24,9 @@ class OpenRouterProvider implements AiProvider {
           'aiCommitPr.openRouterApiKey'
         );
       }
-      throw new Error('OpenRouter API key is not configured.');
+      return false;
     }
+    return true;
   }
 
   generate(messages: Message[]): Promise<string> {
@@ -34,9 +37,10 @@ class OpenRouterProvider implements AiProvider {
 class ClaudeCliProvider implements AiProvider {
   constructor(private cliPath: string) {}
 
-  async preflight(): Promise<void> {
+  async preflight(): Promise<boolean> {
     try {
       await claudeCli.preflight({ cliPath: this.cliPath });
+      return true;
     } catch (err) {
       const action = await vscode.window.showErrorMessage(
         `AI Commit: ${err instanceof Error ? err.message : String(err)}`,
@@ -48,7 +52,7 @@ class ClaudeCliProvider implements AiProvider {
           'aiCommitPr.claudeCliPath'
         );
       }
-      throw err;
+      return false;
     }
   }
 

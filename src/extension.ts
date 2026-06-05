@@ -13,8 +13,6 @@ import { PRPanel } from './webview/prPanel';
 function getConfig() {
   const cfg = vscode.workspace.getConfiguration('aiCommitPr');
   return {
-    apiKey: cfg.get<string>('openRouterApiKey') ?? '',
-    model: cfg.get<string>('model') ?? 'openai/gpt-oss-120b:free',
     baseBranch: cfg.get<string>('baseBranch') ?? 'main',
     commitPrompt: cfg.get<string>('commitPrompt') ?? '',
     prPrompt: cfg.get<string>('prPrompt') ?? '',
@@ -38,7 +36,9 @@ async function generateCommit(): Promise<void> {
   }
 
   const provider = getProvider();
-  await provider.preflight();
+  if (!(await provider.preflight())) {
+    return;
+  }
 
   const config = getConfig();
 
@@ -73,7 +73,9 @@ async function generatePR(): Promise<void> {
   }
 
   const provider = getProvider();
-  await provider.preflight();
+  if (!(await provider.preflight())) {
+    return;
+  }
 
   const repoRoot = repo.rootUri.fsPath;
 
