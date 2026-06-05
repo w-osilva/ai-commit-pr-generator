@@ -58,17 +58,26 @@ function runProcess(
     child.stderr.on('data', (d) => (stderr += d.toString()));
 
     child.on('error', (err: NodeJS.ErrnoException) => {
+      if (settled) {
+        return;
+      }
       settled = true;
       clearTimeout(timer);
       resolve({ code: null, stdout, stderr: stderr + err.message, spawnError: err });
     });
 
     child.on('close', (code) => {
+      if (settled) {
+        return;
+      }
       settled = true;
       clearTimeout(timer);
       resolve({ code, stdout, stderr });
     });
 
+    // Swallow EPIPE: claude may exit before draining stdin; an unhandled
+    // stream error would otherwise crash the extension host.
+    child.stdin.on('error', () => {});
     child.stdin.end(input);
   });
 }
