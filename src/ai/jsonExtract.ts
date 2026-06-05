@@ -3,7 +3,9 @@ export interface ExtractedPR {
   body?: string;
 }
 
-// Find the first balanced {...} block in arbitrary text.
+// Find the first balanced {...} block in arbitrary text. Known limitation: if prose
+// before the JSON contains its own balanced braces, that block is returned instead;
+// acceptable because the prompt instructs the model to emit only the JSON object.
 function firstBalancedObject(text: string): string | null {
   const start = text.indexOf('{');
   if (start === -1) {
@@ -47,6 +49,15 @@ function escapeNewlinesInStrings(json: string): string {
     if (inString) {
       if (escaped) {
         escaped = false;
+        // A literal newline/CR right after a backslash is doubly malformed; fix the escape.
+        if (ch === '\n') {
+          out += 'n';
+          continue;
+        }
+        if (ch === '\r') {
+          out += 'r';
+          continue;
+        }
         out += ch;
         continue;
       }
