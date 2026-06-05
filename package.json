@@ -3,7 +3,7 @@
   "displayName": "AI Commit & PR Generator",
   "description": "Generate AI-powered git commit messages (Conventional Commits) and PR descriptions using OpenRouter or your SSO-authenticated Claude CLI session.",
   "publisher": "wsilva",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -65,7 +65,10 @@
       "properties": {
         "aiCommitPr.provider": {
           "type": "string",
-          "enum": ["openrouter", "claude-cli"],
+          "enum": [
+            "openrouter",
+            "claude-cli"
+          ],
           "enumDescriptions": [
             "Call the OpenRouter HTTP API (requires an API key).",
             "Shell out to the locally installed, SSO-authenticated Claude CLI (no API key)."
