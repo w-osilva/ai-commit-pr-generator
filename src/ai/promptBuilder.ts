@@ -1,6 +1,7 @@
 import { Message } from './openRouterClient';
 import { CommitEntry } from '../git/gitProvider';
 import { DEFAULT_PR_TEMPLATE } from '../utils/templateReader';
+import { extractJsonObject } from './jsonExtract';
 
 const COMMIT_PROMPT = `You are a senior engineer writing a git commit message for a production codebase.
 
@@ -82,21 +83,17 @@ export interface PRResult {
 }
 
 export function parsePRResponse(raw: string): PRResult {
-  // Strip markdown code fences if model wraps in ```json
-  const cleaned = raw.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/, '').trim();
-
-  try {
-    const parsed = JSON.parse(cleaned) as { title?: string; body?: string };
+  const extracted = extractJsonObject(raw);
+  if (extracted && (extracted.title || extracted.body)) {
     return {
-      title: parsed.title ?? '',
-      body: parsed.body ?? cleaned,
-    };
-  } catch {
-    // Best-effort fallback: first line as title, rest as body
-    const lines = raw.split('\n');
-    return {
-      title: lines[0].replace(/^#+\s*/, '').trim(),
-      body: lines.slice(1).join('\n').trim(),
+      title: extracted.title ?? '',
+      body: extracted.body ?? '',
     };
   }
+  // Best-effort fallback: first line as title, rest as body.
+  const lines = raw.trim().split('\n');
+  return {
+    title: lines[0].replace(/^#+\s*/, '').trim(),
+    body: lines.slice(1).join('\n').trim(),
+  };
 }
