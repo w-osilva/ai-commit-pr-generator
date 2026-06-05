@@ -1,9 +1,9 @@
 {
   "name": "ai-commit-pr-generator",
   "displayName": "AI Commit & PR Generator",
-  "description": "Generate AI-powered git commit messages (Conventional Commits) and PR descriptions using OpenRouter.",
+  "description": "Generate AI-powered git commit messages (Conventional Commits) and PR descriptions using OpenRouter or your SSO-authenticated Claude CLI session.",
   "publisher": "wsilva",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -15,6 +15,7 @@
     "commit",
     "ai",
     "openrouter",
+    "claude",
     "pull request",
     "conventional commits"
   ],
