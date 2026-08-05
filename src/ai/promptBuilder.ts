@@ -1,6 +1,6 @@
 import { Message } from './openRouterClient';
 import { CommitEntry } from '../git/gitProvider';
-import { DEFAULT_PR_TEMPLATE } from '../utils/templateReader';
+import { DEFAULT_PR_TEMPLATE } from '../utils/defaultPrTemplate';
 import { extractJsonObject } from './jsonExtract';
 
 const COMMIT_PROMPT = `You write exactly ONE git commit message for the staged diff, in Conventional Commits. Reason silently, then output only the final message.
