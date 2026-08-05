@@ -27,12 +27,14 @@ src/
   git/
     gitProvider.ts          # Wraps vscode.git API
                             # getStagedDiff, getStructuredCommitHistory,
-                            # getCurrentBranch, getRepository
+                            # getCurrentBranch, getRepository, getBranchDiff
+    truncate.ts             # Caps a diff to the character limit
   ai/
     openRouterClient.ts     # HTTP client for OpenRouter (native fetch, no dependencies)
     promptBuilder.ts        # Builds prompts for commit and PR; parses responses
   utils/
     templateReader.ts       # Finds PR template in workspace
+    defaultPrTemplate.ts    # Built-in fallback PR template
   webview/
     prPanel.ts              # WebviewPanel — editable title/body + copy buttons
 scripts/
@@ -88,7 +90,8 @@ User triggers generatePR command
 → getRepository()
 → getStructuredCommitHistory()   git log + git diff-tree per commit → JSON[]
 → findPRTemplate()               checks .github/, root, docs/
-→ buildPRMessages()              XML-tagged prompt with history + template
+→ getBranchDiff()                git diff against the base branch, capped in size
+→ buildPRMessages()              XML-tagged prompt with history + template + diff
 → generate()                     POST openrouter.ai/api/v1/chat/completions
 → parsePRResponse()              extracts { title, body } from JSON response
 → PRPanel.createOrShow()         opens WebviewPanel
@@ -105,7 +108,7 @@ Prompts live in [src/ai/promptBuilder.ts](src/ai/promptBuilder.ts).
 - `PR_WRITING_GUIDELINES` — writing style rules appended to the PR prompt.
 - `buildPRMessages()` — assembles `<git_history>` and `<pull_request_template>` XML tags.
 
-Users can override the prompts via `aiCommitPr.commitPrompt` and `aiCommitPr.prPrompt` settings. Custom prompts support `{diff}` / `{changes}` (commit) and `{history}` / `{template}` (PR).
+Users can override the prompts via `aiCommitPr.commitPrompt` and `aiCommitPr.prPrompt` settings. Custom prompts support `{diff}` / `{changes}` (commit) and `{history}` / `{template}` / `{diff}` (PR).
 
 ---
 
