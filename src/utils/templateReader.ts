@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
-export { DEFAULT_PR_TEMPLATE } from './defaultPrTemplate';
 
 const TEMPLATE_PATHS = [
   '.github/pull_request_template.md',
