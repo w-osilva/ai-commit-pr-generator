@@ -91,6 +91,11 @@
           "default": "claude",
           "description": "Path to the Claude CLI binary. Override if 'claude' is not on the extension host's PATH (e.g. an nvm install under WSL)."
         },
+        "aiCommitPr.includeDiff": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Send the branch diff to the model when generating a PR description. Turn this off to send only the commit history — useful on a private codebase, or to cut token cost on a paid model."
+        },
         "aiCommitPr.baseBranch": {
           "type": "string",
           "default": "main",

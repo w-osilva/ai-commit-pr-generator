@@ -17,6 +17,7 @@ function getConfig() {
     baseBranch: cfg.get<string>('baseBranch') ?? 'main',
     commitPrompt: cfg.get<string>('commitPrompt') ?? '',
     prPrompt: cfg.get<string>('prPrompt') ?? '',
+    includeDiff: cfg.get<boolean>('includeDiff') ?? true,
   };
 }
 
@@ -95,7 +96,7 @@ async function generatePR(): Promise<void> {
       }
 
       const template = await findPRTemplate(repoRoot);
-      const diff = getBranchDiff(repoRoot, config.baseBranch);
+      const diff = config.includeDiff ? getBranchDiff(repoRoot, config.baseBranch) : '';
       const messages = buildPRMessages(history, template, diff, config.prPrompt || undefined);
 
       const raw = await provider.generate(messages);

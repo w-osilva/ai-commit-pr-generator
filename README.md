@@ -79,6 +79,7 @@ From the GitHub Pull Requests panel:
 | `aiCommitPr.model` | `openai/gpt-oss-120b:free` | OpenRouter model ID. OpenRouter backend only |
 | `aiCommitPr.claudeCliPath` | `claude` | Path to the Claude CLI binary. Override when it is not on PATH |
 | `aiCommitPr.baseBranch` | `main` | Branch the PR is compared against |
+| `aiCommitPr.includeDiff` | `true` | Send the branch diff to the model for PR descriptions. Turn off to send only commit history |
 | `aiCommitPr.commitPrompt` | *(built-in)* | Custom commit prompt. Use `{diff}` as the placeholder |
 | `aiCommitPr.prPrompt` | *(built-in)* | Custom PR prompt. Use `{history}`, `{diff}` and `{template}` as placeholders |
 
