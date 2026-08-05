@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { execSync } from 'child_process';
+import { truncateDiff } from './truncate';
 
 interface GitExtension {
   getAPI(version: 1): GitAPI;
@@ -176,3 +177,27 @@ export function getStructuredCommitHistory(
     })
     .filter((c: CommitEntry | null): c is CommitEntry => c !== null);
 }
+
+/**
+ * The accumulated diff of the current branch against its base, capped in size.
+ * Returns an empty string when the base ref cannot be resolved or git fails —
+ * PR generation falls back to commit history alone rather than erroring.
+ */
+export function getBranchDiff(repoRoot: string, baseBranch: string): string {
+  const baseRef = resolveBaseRef(repoRoot, baseBranch);
+  if (!baseRef) {
+    return '';
+  }
+
+  try {
+    const raw = execSync(`git diff -M ${baseRef}...HEAD`, {
+      cwd: repoRoot,
+      maxBuffer: 1024 * 1024 * 10,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).toString();
+    return truncateDiff(raw);
+  } catch {
+    return '';
+  }
+}
+
