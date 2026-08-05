@@ -8,3 +8,20 @@ test('buildCommitMessages interpolates the diff into the prompt', () => {
   assert.equal(messages[0].role, 'user');
   assert.ok(messages[0].content.includes('diff --git a/a.ts b/a.ts'));
 });
+
+test('the commit prompt forbids scopes', () => {
+  const content = buildCommitMessages('some diff')[0].content;
+  assert.ok(content.includes('NEVER write a scope'));
+  assert.equal(content.includes('type(scope)'), false);
+});
+
+test('the commit prompt carries the shared writing style rules', () => {
+  const content = buildCommitMessages('some diff')[0].content;
+  assert.ok(content.includes('One idea per sentence'));
+  assert.ok(content.includes('Active voice'));
+});
+
+test('a custom commit prompt overrides the built-in one', () => {
+  const content = buildCommitMessages('some diff', 'Custom: {diff}')[0].content;
+  assert.equal(content, 'Custom: some diff');
+});
