@@ -3,7 +3,7 @@ import { CommitEntry } from '../git/gitProvider';
 import { DEFAULT_PR_TEMPLATE } from '../utils/defaultPrTemplate';
 import { extractJsonObject } from './jsonExtract';
 
-const WRITING_STYLE = `WRITING STYLE — applies to every word you write:
+export const WRITING_STYLE = `WRITING STYLE — applies to every word you write:
 - One idea per sentence. If a sentence joins two clauses with "and" or a semicolon, split it.
 - Active voice. "We now use X", not "X is now used".
 - Common words. Never: shipped with, hand-rolled, leverage, surface (as a verb), sunset, in parallel, notably, furthermore, it is worth noting.
@@ -101,22 +101,24 @@ Produce the JSON now. Output only the JSON object.`;
 
 export function buildCommitMessages(diff: string, customPrompt?: string): Message[] {
   const prompt = customPrompt || COMMIT_PROMPT;
-  const content = prompt
-    .replace('{diff}', diff)
-    .replace('{changes}', diff); // accept both placeholders
+  const values: Record<string, string> = { diff, changes: diff }; // accept both placeholders
+  const content = prompt.replace(/\{(diff|changes)\}/g, (m, k) => values[k] ?? m);
 
   return [{ role: 'user', content }];
 }
 
 /**
- * Fills the diff placeholder. An empty diff removes the whole <diff> block so
- * the model is not handed an empty section to reason about.
+ * Strips the whole <diff>{diff}</diff> block when the diff is empty, so the
+ * model is not handed an empty section to reason about. Must run on the raw
+ * prompt, before {history}/{template}/{diff} are interpolated — otherwise
+ * history or template content shaped like a diff block could be matched and
+ * removed.
  */
-function applyDiff(prompt: string, diff: string): string {
+function stripEmptyDiffBlock(prompt: string, diff: string): string {
   if (diff) {
-    return prompt.replace('{diff}', diff);
+    return prompt;
   }
-  return prompt.replace(/<diff>\s*\{diff\}\s*<\/diff>\n*/, '').replace('{diff}', '');
+  return prompt.replace(/<diff>\s*\{diff\}\s*<\/diff>\n*/, '');
 }
 
 export function buildPRMessages(
@@ -127,12 +129,10 @@ export function buildPRMessages(
 ): Message[] {
   const templateSection = template ?? DEFAULT_PR_TEMPLATE;
   const historyJson = JSON.stringify(history, null, 2);
+  const values: Record<string, string> = { history: historyJson, template: templateSection, diff };
 
-  const prompt = customPrompt || PR_PROMPT;
-  const content = applyDiff(
-    prompt.replace('{history}', historyJson).replace('{template}', templateSection),
-    diff
-  );
+  const prompt = stripEmptyDiffBlock(customPrompt || PR_PROMPT, diff);
+  const content = prompt.replace(/\{(history|template|diff)\}/g, (m, k) => values[k] ?? m);
 
   return [{ role: 'user', content }];
 }
