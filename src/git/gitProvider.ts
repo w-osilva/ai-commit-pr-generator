@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { execSync } from 'child_process';
-import { truncateDiff } from './truncate';
+import { selectDiffWithinBudget } from './truncate';
 
 interface GitExtension {
   getAPI(version: 1): GitAPI;
@@ -195,9 +195,9 @@ export function getBranchDiff(repoRoot: string, baseBranch: string): string {
       maxBuffer: 1024 * 1024 * 10,
       stdio: ['pipe', 'pipe', 'pipe'],
     }).toString();
-    return truncateDiff(raw);
+    return selectDiffWithinBudget(raw);
   } catch (err) {
     const partial = (err as { stdout?: Buffer | string })?.stdout;
-    return partial ? truncateDiff(partial.toString()) : '';
+    return partial ? selectDiffWithinBudget(partial.toString()) : '';
   }
 }

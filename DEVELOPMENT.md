@@ -28,7 +28,8 @@ src/
     gitProvider.ts          # Wraps vscode.git API
                             # getStagedDiff, getStructuredCommitHistory,
                             # getCurrentBranch, getRepository, getBranchDiff
-    truncate.ts             # Caps a diff to the character limit
+    truncate.ts             # Fits a diff into the character budget by
+                            # dropping oversized files, not by cutting the tail
   ai/
     openRouterClient.ts     # HTTP client for OpenRouter (native fetch, no dependencies)
     promptBuilder.ts        # Builds prompts for commit and PR; parses responses
