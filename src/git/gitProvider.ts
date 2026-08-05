@@ -196,8 +196,8 @@ export function getBranchDiff(repoRoot: string, baseBranch: string): string {
       stdio: ['pipe', 'pipe', 'pipe'],
     }).toString();
     return truncateDiff(raw);
-  } catch {
-    return '';
+  } catch (err) {
+    const partial = (err as { stdout?: Buffer | string })?.stdout;
+    return partial ? truncateDiff(partial.toString()) : '';
   }
 }
-
