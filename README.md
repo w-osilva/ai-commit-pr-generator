@@ -80,7 +80,7 @@ From the GitHub Pull Requests panel:
 | `aiCommitPr.claudeCliPath` | `claude` | Path to the Claude CLI binary. Override when it is not on PATH |
 | `aiCommitPr.baseBranch` | `main` | Branch the PR is compared against |
 | `aiCommitPr.commitPrompt` | *(built-in)* | Custom commit prompt. Use `{diff}` as the placeholder |
-| `aiCommitPr.prPrompt` | *(built-in)* | Custom PR prompt. Use `{history}` and `{template}` as placeholders |
+| `aiCommitPr.prPrompt` | *(built-in)* | Custom PR prompt. Use `{history}`, `{diff}` and `{template}` as placeholders |
 
 ## Choosing a model
 

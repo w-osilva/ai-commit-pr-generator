@@ -104,7 +104,7 @@
         "aiCommitPr.prPrompt": {
           "type": "string",
           "default": "",
-          "description": "Custom PR prompt. Use {history} (JSON commit history) and {template} as placeholders. Leave empty to use the built-in default prompt."
+          "description": "Custom PR prompt. Use {history} (JSON commit history), {diff} (branch diff) and {template} as placeholders. Leave empty to use the built-in default prompt."
         }
       }
     }

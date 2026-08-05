@@ -4,6 +4,7 @@ import {
   getStagedDiff,
   getCurrentBranch,
   getStructuredCommitHistory,
+  getBranchDiff,
 } from './git/gitProvider';
 import { getProvider } from './ai/aiProvider';
 import { buildCommitMessages, buildPRMessages, parsePRResponse } from './ai/promptBuilder';
@@ -94,7 +95,8 @@ async function generatePR(): Promise<void> {
       }
 
       const template = await findPRTemplate(repoRoot);
-      const messages = buildPRMessages(history, template, config.prPrompt || undefined);
+      const diff = getBranchDiff(repoRoot, config.baseBranch);
+      const messages = buildPRMessages(history, template, diff, config.prPrompt || undefined);
 
       const raw = await provider.generate(messages);
       const { title, body } = parsePRResponse(raw);

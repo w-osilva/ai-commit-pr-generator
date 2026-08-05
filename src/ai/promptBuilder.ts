@@ -50,44 +50,52 @@ The child process can exit before it drains stdin. The unhandled stream error to
 
 Write the commit message now. Output only the message.`;
 
-const PR_PROMPT = `You write a pull request description for review. The git history is the source of truth for what changed; the template defines the exact structure your description must follow. Reason silently through the STEPS, then output only the JSON object.
+const PR_PROMPT = `You write a pull request description for review. The git history and the diff are the source of truth for what changed; the template defines the exact structure your description must follow. Reason silently through the STEPS, then output only the JSON object.
 
 <git_history>
 {history}
 </git_history>
+
+<diff>
+{diff}
+</diff>
 
 <pull_request_template>
 {template}
 </pull_request_template>
 
 STEPS (silent):
-1. Read the whole history. Cluster the commits into a few themes (by feature/area), not commit-by-commit.
-2. Infer the PR's PRIMARY intent and its motivation (the why), even if commit messages are terse.
-3. Note anything a reviewer must not miss: breaking changes, data migrations, new dependencies, config/security changes, follow-ups. (Only surface these if the appropriate template section exists.)
-4. Map the themes onto the template's sections, keeping its exact headers and order.
-5. Draft concise prose per section. Then build and validate the JSON.
+1. Read the history and the diff together. Cluster the work into a few themes by feature or area, not commit by commit.
+2. Infer the PR's PRIMARY intent and its motivation, even when the commit messages are terse.
+3. Decide whether this PR changes anything a user sees. You need the answer for the heading rule below.
+4. Note anything a reviewer must not miss: breaking changes, data migrations, new dependencies, config or security changes.
+5. Map the themes onto the template's sections, keeping its headers and their order.
+6. Draft each section. Then build and validate the JSON.
 
 TITLE:
-- Conventional Commits: \`type(scope): summary\` (scope optional).
+- \`type: summary\`. NEVER write a scope. There is no parenthesised form.
 - Imperative, lowercase summary, no trailing period, <= 72 chars.
-- Capture the PRIMARY intent of the whole PR, not one commit. Use \`type!:\` if it's a breaking change.
+- Capture the PRIMARY intent of the whole PR, not one commit. Use \`type!:\` for a breaking change.
+
+${WRITING_STYLE}
 
 BODY (GitHub-flavored Markdown):
-- Use the template's section headers verbatim and in order. Never invent sections it lacks.
-- Omit a section entirely if you have nothing meaningful for it. Do not write "N/A".
-- Explain WHY the change was made and HOW it achieves the goal — not a flat list of WHAT changed.
-- Be direct: 1-2 sentences per section. No emojis, no salesy or filler adjectives.
-- Bullets are fine; do not bold the start of each bullet.
+- Use the template's section headers verbatim and in order. Never invent a section it lacks.
+- Omit a section entirely when you have nothing real for it. Never write "N/A".
+- ONE theme: running prose, 1 to 3 sentences.
+- TWO OR MORE themes: one heading per theme, at one level below the template's own headers (### under ##). 1 to 3 sentences per theme.
+- WHAT EARNS A HEADING: when the PR mixes user-visible change with internal work, internal work gets NO heading of its own. Fold it into the theme it serves, or into Reviewer notes when it serves none. When the whole PR is internal — a pure refactor, a build migration — its themes take headings as normal.
+- REVIEWER NOTES: you MAY end with a \`### Reviewer notes\` block of \`-\` bullets, even when the template has no such section, but ONLY for breaking changes, data migrations, new dependencies, config or security changes, or a diff inflated by code generation. Never for anything generic.
 - Do not describe test changes unless the PR is entirely about the test suite.
 
-NEVER: output anything outside the JSON; use code fences around the JSON; invent changes not in the history; pad with generic statements.
+NEVER: output anything outside the JSON; use code fences around the JSON; invent changes absent from the history and diff; pad with generic statements.
 
 OUTPUT — reply with ONLY this JSON object: {"title": "...", "body": "..."}
 - Valid JSON, double quotes, no trailing commas.
 - "body" is a SINGLE JSON string: escape every line break as \\n and every double quote as \\". Put no literal newlines inside the string.
 
 Example of the exact shape (content is illustrative only):
-{"title": "feat(billing): prorate mid-cycle plan upgrades", "body": "## Summary\\nUpgrades before renewal charged the full new price, driving support tickets.\\n\\n## Changes\\nProration credits the unused portion of the current plan against the upgrade."}
+{"title": "feat: translate the licences page and share the selection cards", "body": "## Description\\n\\n### Missing translations on the licences page\\n\\npt_BR and es_PE users saw English text across the page. This PR adds the missing translations.\\n\\n### Shared selection cards\\n\\nEach screen had its own copy of the cards. They now use the shared component.\\n\\n### Reviewer notes\\n\\n- The component library goes to 2.2.0."}
 
 Produce the JSON now. Output only the JSON object.`;
 
@@ -100,18 +108,31 @@ export function buildCommitMessages(diff: string, customPrompt?: string): Messag
   return [{ role: 'user', content }];
 }
 
+/**
+ * Fills the diff placeholder. An empty diff removes the whole <diff> block so
+ * the model is not handed an empty section to reason about.
+ */
+function applyDiff(prompt: string, diff: string): string {
+  if (diff) {
+    return prompt.replace('{diff}', diff);
+  }
+  return prompt.replace(/<diff>\s*\{diff\}\s*<\/diff>\n*/, '').replace('{diff}', '');
+}
+
 export function buildPRMessages(
   history: CommitEntry[],
   template: string | null,
+  diff: string,
   customPrompt?: string
 ): Message[] {
   const templateSection = template ?? DEFAULT_PR_TEMPLATE;
   const historyJson = JSON.stringify(history, null, 2);
 
   const prompt = customPrompt || PR_PROMPT;
-  const content = prompt
-    .replace('{history}', historyJson)
-    .replace('{template}', templateSection);
+  const content = applyDiff(
+    prompt.replace('{history}', historyJson).replace('{template}', templateSection),
+    diff
+  );
 
   return [{ role: 'user', content }];
 }
