@@ -8,7 +8,7 @@ const WRITING_STYLE = `WRITING STYLE — applies to every word you write:
 - Active voice. "We now use X", not "X is now used".
 - Common words. Never: shipped with, hand-rolled, leverage, surface (as a verb), sunset, in parallel, notably, furthermore, it is worth noting.
 - Say what was wrong or missing, then what this change does about it. Nothing else.
-- Cut all of this: the process you followed, how many review passes happened, counts and metrics, exhaustive lists of files or screens, and how the solution works internally. The reader has the diff for that. A number or detail earns its place only when the reader must act on it.
+- Cut all of this: the process you followed, how many review passes happened, counts and metrics, exhaustive lists of files or screens, and how the solution works internally. The reader has the diff for that. This includes internal limits, caps, thresholds and configuration values (a byte or character cap, a timeout, a retry count, a buffer size) — a number like that is exactly the kind of detail to cut, never a detail that earns its place. Keep a number only when the reader must act on it directly (a version to bump, a manual migration step); when in doubt, cut it.
 - No emojis. No filler adjectives. No salesy phrasing.`;
 
 const COMMIT_PROMPT = `You write exactly ONE git commit message for the staged diff, in Conventional Commits. Reason silently, then output only the final message.
@@ -26,7 +26,7 @@ ${WRITING_STYLE}
 
 BODY: none by default. Add one ONLY when the diff does not tell the story on its own — the why, a fix's root cause, a trade-off.
 - ONE subject: short prose, at most 3 sentences.
-- TWO OR MORE distinct fronts: one \`-\` bullet per front, one line each, a short label first.
+- TWO OR MORE distinct fronts: one \`-\` bullet per front, one line each, a short label first. You may lead with one or two prose sentences of shared context — the why, the root cause — before the bullets.
 - Plain text only. NEVER use markdown bold or backticks — git log renders them literally.
 - Wrap at 72 columns. Never list file names.
 
@@ -82,11 +82,11 @@ ${WRITING_STYLE}
 BODY (GitHub-flavored Markdown):
 - Use the template's section headers verbatim and in order. Never invent a section it lacks.
 - Omit a section entirely when you have nothing real for it. Never write "N/A".
-- ONE theme: running prose, 1 to 3 sentences.
-- TWO OR MORE themes: one heading per theme, at one level below the template's own headers (### under ##). 1 to 3 sentences per theme.
+- ONE theme: running prose, HARD CAP of 1 to 3 sentences. A 4th sentence is a rule violation, however much happened in that theme — cut, merge, or move detail out rather than add a sentence.
+- TWO OR MORE themes: one heading per theme, at one level below the template's own headers (### under ##). HARD CAP of 1 to 3 sentences per theme, same rule: never a 4th, no matter how much happened.
 - WHAT EARNS A HEADING: when the PR mixes user-visible change with internal work, internal work gets NO heading of its own. Fold it into the theme it serves, or into Reviewer notes when it serves none. When the whole PR is internal — a pure refactor, a build migration — its themes take headings as normal.
 - REVIEWER NOTES: you MAY end with a \`### Reviewer notes\` block of \`-\` bullets, even when the template has no such section, but ONLY for breaking changes, data migrations, new dependencies, config or security changes, or a diff inflated by code generation. Never for anything generic.
-- Do not describe test changes unless the PR is entirely about the test suite.
+- TESTING: a template section that asks about testing (for example, a \`Test plan\` heading) MUST be answered — say how to verify the change: what to run, what to check. That is a required answer, not a description of test changes. Outside such a section, in narrative sections like Summary, Motivation or Changes, do not describe test changes unless the PR is entirely about the test suite.
 
 NEVER: output anything outside the JSON; use code fences around the JSON; invent changes absent from the history and diff; pad with generic statements.
 
