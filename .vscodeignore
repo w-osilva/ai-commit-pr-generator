@@ -12,5 +12,6 @@ tsconfig.json
 DEVELOPMENT.md
 docs/**
 test/**
+.superpowers/**
 **/*.map
 **/*.ts
